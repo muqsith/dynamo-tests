@@ -1,5 +1,6 @@
 {
     "dataFile": "/dfdif/dlifdif/ldjfdlkjf",
     "dataDir": "/lkfjf/dlfjdlkfj/ldkfjldkf/dlkfjdlkfj/ldfjdf-data",
-    "tableName": "people"
+    "tableName": "people",
+    "insertBatchMaxSize": 25
 }

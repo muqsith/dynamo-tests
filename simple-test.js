@@ -1,29 +1,19 @@
 const fs = require('fs-extra');
 const program = require('commander');
-const Promise = require('bluebird');
-
-const DynamoDB = require('aws-sdk/clients/dynamodb');
-const dynamodb = new DynamoDB({
-    region: 'ap-south-1'
-});
 
 const config = require('./load-config.js');
-
-const { getDynamoObject, getJsonObject } = require('./dynamoHelpers/objectWrapper.js');
-const createPutRequest = require('./dynamoHelpers/createPutRequest');
+const insertRecords = require('./insertRecords');
 
 const insertObjects = () => {
     return fs.readJson(config.dataFile)
     .then((result) => {
-        const records = result.slice(0, 25);
-        const params = createPutRequest(config.tableName, records);
-        dynamodb.batchWriteItem(params, function(err, data) {
-            if (err) console.log(err, err.stack); // an error occurred
-            else     console.log(data);           // successful response
-          });
+        return insertRecords(config.tableName, result);
     })
     .then(() => {
         console.log('All records uploaded');
+    })
+    .catch((err) => {
+        console.log('Error occured while uploading records', err);
     });
 }
 
