@@ -5,7 +5,7 @@ const dynamodb = new DynamoDB({
     region: 'ap-south-1'
 });
 
-const config = require('./load-config.js');
+const config = require('./loadConfig.js');
 
 const createPutRequest = require('./dynamoHelpers/createPutRequest');
 

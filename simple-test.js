@@ -1,7 +1,7 @@
 const fs = require('fs-extra');
 const program = require('commander');
 
-const config = require('./load-config.js');
+const config = require('./loadConfig.js');
 const insertRecords = require('./insertRecords');
 
 const insertObjects = () => {

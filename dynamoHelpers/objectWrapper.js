@@ -92,6 +92,32 @@ const getPrimitiveType = (value) => {
     return type;
 }
 
+const getDynamoType = (dynamoObject) => {
+    let type = undefined;
+    if (dynamoObject[STRING_TYPE]) {
+        type = STRING_TYPE;
+    } else if (dynamoObject[NUMBER_TYPE]) {
+        type = NUMBER_TYPE;
+    } else if (dynamoObject[BUFFER_TYPE]) {
+        type = BUFFER_TYPE;
+    } else if (dynamoObject[STRING_SET_TYPE]) {
+        type = STRING_SET_TYPE;
+    } else if (dynamoObject[NUMBER_SET_TYPE]) {
+        type = NUMBER_SET_TYPE;
+    } else if (dynamoObject[BUFFER_SET_TYPE]) {
+        type = BUFFER_SET_TYPE;
+    } else if (dynamoObject[MAP_TYPE]) {
+        type = MAP_TYPE;
+    } else if (dynamoObject[LIST_TYPE]) {
+        type = LIST_TYPE;
+    } else if (dynamoObject[NULL_TYPE]) {
+        type = NULL_TYPE;
+    } else if (dynamoObject[BOOLEAN_TYPE]) {
+        type = BOOLEAN_TYPE;
+    }
+    return type;    
+}
+
 
 const getDynamoObject = (jsonObject) => {
     let result = {};
@@ -104,10 +130,18 @@ const getDynamoObject = (jsonObject) => {
                     if (type === MAP_TYPE) {
                         result[key] = {
                             [type]: getDynamoObject(val)
-                        }
+                        };
+                    } else if (type === NUMBER_TYPE) {
+                        result[key] = {
+                            [type]: JSON.stringify(val)
+                        };
+                    } else if (type === NUMBER_SET_TYPE) {
+                        result[key] = {
+                            [type]: val.map((e) => JSON.stringify(e))
+                        };
                     } else {
                         result[key] = {
-                            [type]: (typeof val === 'number') ? JSON.stringify(val) : val
+                            [type]: val
                         }
                     }                    
                 }
@@ -117,20 +151,30 @@ const getDynamoObject = (jsonObject) => {
     return result;
 }
 
-const getDynamoTypeValue = (dynamoObject) => {
-    return (
-        dynamoObject[STRING_TYPE] || 
-        dynamoObject[STRING_TYPE] ||
-        dynamoObject[NUMBER_TYPE] ||
-        dynamoObject[BUFFER_TYPE] ||
-        dynamoObject[STRING_SET_TYPE] ||
-        dynamoObject[NUMBER_SET_TYPE] ||
-        dynamoObject[BUFFER_SET_TYPE] ||
-        dynamoObject[MAP_TYPE] ||
-        dynamoObject[LIST_TYPE] ||
-        dynamoObject[NULL_TYPE] ||
-        dynamoObject[BOOLEAN_TYPE]
-    );
+const getJsonFromMapType = (mapObject) => {
+    const result = {};
+    if (mapObject && typeof mapObject === 'object') {
+        for (const key in mapObject) {
+            result[key] = getValueFromDynamoObject(mapObject, key);
+        }
+    }
+    return result;
+}
+
+const getValueFromDynamoObject = (dynamoObject, key) => {
+    let result = undefined;
+    const value = dynamoObject[key];
+    const type = getDynamoType(value);
+    if (type === MAP_TYPE) {
+        result = getJsonFromMapType(value[type]);
+    } else if (type === NUMBER_TYPE) {
+        result = +value[type];
+    } else if (type === NUMBER_SET_TYPE) {
+        result = value[type].map((e) => +e);
+    } else {
+        result = value[type];
+    }
+    return result;
 }
 
 const getJsonObject = (dynamoObject) => {
@@ -138,7 +182,7 @@ const getJsonObject = (dynamoObject) => {
     if (dynamoObject && typeof dynamoObject === 'object') {
         for (const key in dynamoObject) {
             if (dynamoObject.hasOwnProperty(key)) {
-                result[key] = getDynamoTypeValue(dynamoObject[key]);
+                result[key] = getValueFromDynamoObject(dynamoObject, key);
             }
         }
     }
